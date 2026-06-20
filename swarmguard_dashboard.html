@@ -911,6 +911,13 @@ function updateAgentReasonings(agents) {
     const i = AGENT_IDX[name];
     if (i === undefined) continue;
 
+    const address = report.address;
+    if (address) {
+      agentAddresses[i] = address;
+      document.getElementById(`addr-${i}`).textContent =
+        address.slice(0,6) + "…" + address.slice(-4);
+    }
+
     const reasoning  = report.reasoning  || "";
     const confidence = report.confidence ?? 0;
     const isAttack   = report.is_attack  ?? false;
@@ -1016,6 +1023,14 @@ async function triggerDemo() {
 // ── Restore from localStorage ─────────────────────────────────────────────────
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Pre-fill default mock values
+  document.getElementById("in-coordinator").value = "0x0000000000000000000000000000000000000001";
+  document.getElementById("in-vault").value       = "0x0000000000000000000000000000000000000002";
+  document.getElementById("in-agent0").value      = "0x97B2559F41D20C1A740799135135c38A6532e2B0";
+  document.getElementById("in-agent1").value      = "0x2D72f31A0aFb8B534eef722Fff0e7aB3Cc855848";
+  document.getElementById("in-agent2").value      = "0x2c1EE15c58f4157aA9b7A52e48B25BB930E0a2dB";
+  document.getElementById("in-agent3").value      = "0xDd437Bff14a2EF6721cE3F27E4f33c2D50962CDA";
+
   const coord  = localStorage.getItem("sg_coord");
   const vaultA = localStorage.getItem("sg_vault");
   const agents = [0,1,2,3].map(i => localStorage.getItem(`sg_agent${i}`));
@@ -1023,8 +1038,9 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("in-coordinator").value = coord;
     document.getElementById("in-vault").value       = vaultA;
     agents.forEach((a,i) => { document.getElementById(`in-agent${i}`).value = a; });
-    saveConfig();
   }
+  // Auto-connect on load
+  saveConfig();
 });
 </script>
 </body>

@@ -1,1 +1,254 @@
-[]
+[
+  {
+    "signal_id": "e05f506d-1b41-41a8-8fd9-ee4b72b57e6e",
+    "type": "oracle",
+    "timestamp": "2026-06-20T11:05:26.984608+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "a2655713-2147-4059-9840-fe7fbb4ba4dc",
+    "type": "wallet",
+    "timestamp": "2026-06-20T11:05:31.990475+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "58e8c268-75f5-4423-9ef4-8f6135441e3d",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T11:05:36.992537+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "a3391af0-dc5e-465a-b4d8-3632faa2775c",
+    "type": "velocity",
+    "timestamp": "2026-06-20T11:05:41.994455+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  },
+  {
+    "signal_id": "cd8d8a6e-19fe-49eb-92d8-8d35ac87976a",
+    "type": "oracle",
+    "timestamp": "2026-06-20T11:57:03.915104+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "0acf2d50-870b-4a47-95ec-74afda947fe1",
+    "type": "wallet",
+    "timestamp": "2026-06-20T11:57:08.919162+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "f9b83ad9-d5e5-49ef-a092-7caf68d1dc82",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T11:57:13.925992+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "066b35e7-6563-4dad-91ce-8ac10c3d002b",
+    "type": "velocity",
+    "timestamp": "2026-06-20T11:57:18.932599+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  },
+  {
+    "signal_id": "703a2010-74ea-43ee-bdb6-9671a0ae99fe",
+    "type": "oracle",
+    "timestamp": "2026-06-20T11:59:30.882651+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "7bc00dfb-e242-4fbe-9c94-47ebbe7862a3",
+    "type": "wallet",
+    "timestamp": "2026-06-20T11:59:35.888014+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "4ea8b7ca-24ef-4e86-9218-4a0357685395",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T11:59:40.896200+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "746961c6-bbe9-4bc5-99fc-45855ed1745f",
+    "type": "velocity",
+    "timestamp": "2026-06-20T11:59:45.903316+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  },
+  {
+    "signal_id": "9ba8c714-9ada-4968-9554-9cb2003b6d9f",
+    "type": "oracle",
+    "timestamp": "2026-06-20T12:08:40.766432+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "fddaa640-50c7-43c2-a4f2-5623b745c878",
+    "type": "oracle",
+    "timestamp": "2026-06-20T12:08:44.073267+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "c18905f4-a94b-4b84-bb95-3b65a20c6d27",
+    "type": "wallet",
+    "timestamp": "2026-06-20T12:08:45.841587+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "60768842-c60b-4a86-a058-fd11ff992351",
+    "type": "wallet",
+    "timestamp": "2026-06-20T12:08:49.086883+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "677af6a0-c1fc-471e-b5ce-b85283945b7b",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T12:08:51.085886+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "cc23d0ed-5a46-45b2-9d35-f23db21294f3",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T12:08:54.194082+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "bfa9825c-c977-47c3-aa63-0625b1506802",
+    "type": "velocity",
+    "timestamp": "2026-06-20T12:08:56.093872+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  },
+  {
+    "signal_id": "b37ea017-a97e-497d-817e-f036ffa94abb",
+    "type": "velocity",
+    "timestamp": "2026-06-20T12:08:59.200541+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  },
+  {
+    "signal_id": "2b22400f-370e-4069-8190-da893f76f125",
+    "type": "oracle",
+    "timestamp": "2026-06-20T12:14:14.649449+00:00",
+    "data": {
+      "asset": "ETH",
+      "previous_price": 1950.0,
+      "current_price": 6630.0,
+      "time_elapsed_seconds": 2
+    }
+  },
+  {
+    "signal_id": "28808025-367e-4def-baed-8c73c807f420",
+    "type": "wallet",
+    "timestamp": "2026-06-20T12:14:19.657077+00:00",
+    "data": {
+      "wallet_address": "0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDead",
+      "wallet_age_days": 1,
+      "transaction_amount": 9800000,
+      "wallet_history_summary": "Brand-new wallet created 22 hours ago. Only 1 prior transaction: a small ETH transfer from a mixer. No previous DeFi activity."
+    }
+  },
+  {
+    "signal_id": "29284f0b-fa02-491d-882e-c6aea34c001d",
+    "type": "flashloan",
+    "timestamp": "2026-06-20T12:14:24.660704+00:00",
+    "data": {
+      "loan_amount": 12500000,
+      "repaid_within_same_tx": true,
+      "borrower_address": "0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+    }
+  },
+  {
+    "signal_id": "74960545-f048-4434-957f-c419cdb2e7dd",
+    "type": "velocity",
+    "timestamp": "2026-06-20T12:14:29.684786+00:00",
+    "data": {
+      "vault_balance_before": 800000,
+      "vault_balance_now": 12000,
+      "time_elapsed_seconds": 3
+    }
+  }
+]

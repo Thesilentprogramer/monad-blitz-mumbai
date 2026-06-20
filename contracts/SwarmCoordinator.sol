@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface IVault {
-    function freezeVault() external;
-    function isFrozen() external view returns (bool);
+interface ITargetProtocol {
+    function pause() external;
+    function paused() external view returns (bool);
 }
 
-contract Coordinator {
+contract SwarmCoordinator {
     address[] public agents;
     mapping(address => bool) public isAgent;
     mapping(address => bool) public hasVoted;
@@ -15,20 +15,20 @@ contract Coordinator {
     uint256 public threshold;
     bool public triggered;
     
-    address public targetVault;
+    address public targetProtocol;
     address public owner;
 
     event VerdictSubmitted(address indexed agent, bool isAttack, uint256 currentFlags);
-    event ActionTriggered(address indexed vault);
+    event ActionTriggered(address indexed protocol);
 
-    constructor(address[] memory _agents, uint256 _threshold, address _targetVault) {
+    constructor(address[] memory _agents, uint256 _threshold, address _targetProtocol) {
         require(_threshold <= _agents.length, "Threshold exceeds agent count");
         agents = _agents;
         for (uint256 i = 0; i < _agents.length; i++) {
             isAgent[_agents[i]] = true;
         }
         threshold = _threshold;
-        targetVault = _targetVault;
+        targetProtocol = _targetProtocol;
         owner = msg.sender;
     }
 
@@ -44,8 +44,8 @@ contract Coordinator {
             
             if (flagCount >= threshold && !triggered) {
                 triggered = true;
-                emit ActionTriggered(targetVault);
-                IVault(targetVault).freezeVault();
+                emit ActionTriggered(targetProtocol);
+                ITargetProtocol(targetProtocol).pause();
             }
         } else {
             emit VerdictSubmitted(msg.sender, false, flagCount);

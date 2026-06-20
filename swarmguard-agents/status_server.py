@@ -21,6 +21,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="SwarmGuard Status Server")
 
@@ -33,6 +34,16 @@ app.add_middleware(
 
 # In-memory store: agent_name → latest report dict
 _reports: dict[str, dict] = {}
+
+
+@app.get("/", response_class=HTMLResponse)
+async def get_dashboard():
+    dashboard_path = Path(__file__).parent.parent / "swarmguard_dashboard.html"
+    try:
+        with open(dashboard_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"<h3>Error loading dashboard: {e}</h3>"
 
 
 @app.post("/report")

@@ -38,6 +38,17 @@ class WalletAgent(BaseAgent):
             private_key_env="WALLET_AGENT_PRIVATE_KEY",
         )
 
+    def heuristic_check(self, signal_data: dict) -> tuple[bool, dict]:
+        age = signal_data.get("wallet_age_days", 999)
+        amount = signal_data.get("transaction_amount", 0)
+        is_suspicious = (age < 7) and (amount > 50_000)
+        details = {
+            "wallet_age_days": age,
+            "transaction_amount": amount,
+            "rule": "wallet_age < 7 days AND transaction_amount > 50,000"
+        }
+        return is_suspicious, details
+
     def run(self):
         self.run_loop(SIGNAL_TYPE, SYSTEM_PROMPT)
 

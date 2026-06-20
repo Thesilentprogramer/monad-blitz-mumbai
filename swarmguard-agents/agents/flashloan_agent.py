@@ -33,6 +33,17 @@ class FlashloanAgent(BaseAgent):
             private_key_env="FLASHLOAN_AGENT_PRIVATE_KEY",
         )
 
+    def heuristic_check(self, signal_data: dict) -> tuple[bool, dict]:
+        loan_amount = signal_data.get("loan_amount", 0)
+        repaid = signal_data.get("repaid_within_same_tx", False)
+        is_suspicious = (loan_amount > 100_000) and repaid
+        details = {
+            "loan_amount": loan_amount,
+            "repaid_within_same_tx": repaid,
+            "rule": "loan_amount > 100,000 AND repaid_within_same_tx == True"
+        }
+        return is_suspicious, details
+
     def run(self):
         self.run_loop(SIGNAL_TYPE, SYSTEM_PROMPT)
 

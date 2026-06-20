@@ -32,6 +32,21 @@ class VelocityAgent(BaseAgent):
             private_key_env="VELOCITY_AGENT_PRIVATE_KEY",
         )
 
+    def heuristic_check(self, signal_data: dict) -> tuple[bool, dict]:
+        before = signal_data.get("vault_balance_before", 0)
+        now = signal_data.get("vault_balance_now", 0)
+        drop_pct = 0.0
+        if before > 0:
+            drop_pct = (before - now) / before
+        is_suspicious = drop_pct > 0.10
+        details = {
+            "vault_balance_before": before,
+            "vault_balance_now": now,
+            "drop_percentage": drop_pct,
+            "rule": "balance_drop > 10%"
+        }
+        return is_suspicious, details
+
     def run(self):
         self.run_loop(SIGNAL_TYPE, SYSTEM_PROMPT)
 

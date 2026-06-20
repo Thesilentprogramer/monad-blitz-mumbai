@@ -33,6 +33,21 @@ class OracleAgent(BaseAgent):
             private_key_env="ORACLE_AGENT_PRIVATE_KEY",
         )
 
+    def heuristic_check(self, signal_data: dict) -> tuple[bool, dict]:
+        prev = signal_data.get("previous_price", 0)
+        curr = signal_data.get("current_price", 0)
+        change_pct = 0.0
+        if prev > 0:
+            change_pct = abs(curr - prev) / prev
+        is_suspicious = change_pct > 0.05
+        details = {
+            "previous_price": prev,
+            "current_price": curr,
+            "change_percentage": change_pct,
+            "rule": "price_change > 5%"
+        }
+        return is_suspicious, details
+
     def run(self):
         self.run_loop(SIGNAL_TYPE, SYSTEM_PROMPT)
 

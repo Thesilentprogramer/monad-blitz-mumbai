@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwarmGuard — AI Security Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+  <style>
+    /* ── Reset & tokens ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #070b12;
+      --bg2:         #0b1120;
+      --surface:     #0f1825;
+      --surface2:    #131f30;
+      --surface3:    #182438;
+      --border:      #1c2d44;
+      --border2:     #243656;
+      --text:        #ccd9ee;
+      --text2:       #7d99bb;
+      --muted:       #3d5470;
+
+      --green:       #00e599;
+      --green-glow:  rgba(0,229,153,0.18);
+      --green-dim:   rgba(0,229,153,0.08);
+      --red:         #ff3355;
+      --red-glow:    rgba(255,51,85,0.22);
+      --red-dim:     rgba(255,51,85,0.08);
+      --yellow:      #fbbf24;
+      --yellow-dim:  rgba(251,191,36,0.10);
+      --blue:        #38bdf8;
+      --blue-glow:   rgba(56,189,248,0.18);
+      --blue-dim:    rgba(56,189,248,0.08);
+      --purple:      #a78bfa;
+      --orange:      #fb923c;
+
+      --font-ui:   'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+      --radius:  10px;
+      --radius-sm: 6px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Dot-grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: radial-gradient(rgba(56,189,248,0.045) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    /* Subtle top radial glow */
+    body::after {
+      content: '';
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 400px;
+      background: radial-gradient(ellipse, rgba(56,189,248,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      max-width: 1300px; margin: 0 auto;
+      padding: 20px 24px 40px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .logo-text { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: #fff; }
+    .logo-sub  { font-size: 0.7rem; color: var(--text2); font-family: var(--font-mono); margin-top: 1px; }
+
+    .live-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
+      background: var(--green-dim); border: 1px solid rgba(0,229,153,0.25);
+      font-size: 0.7rem; font-weight: 700; color: var(--green);
+      letter-spacing: 0.06em;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: livepulse 1.8s ease-in-out infinite;
+    }
+    @keyframes livepulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,229,153,0.5); }
+      50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(0,229,153,0); }
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-badges {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em;
+      font-family: var(--font-mono);
+    }
+    .chip-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .chip.blue   { background: var(--blue-dim);  color: var(--blue);   border: 1px solid rgba(56,189,248,.2); }
+    .chip.blue .chip-dot { background: var(--blue); }
+    .chip.green  { background: var(--green-dim); color: var(--green);  border: 1px solid rgba(0,229,153,.2); }
+    .chip.green .chip-dot { background: var(--green); }
+    .chip.red    { background: var(--red-dim);   color: var(--red);    border: 1px solid rgba(255,51,85,.2); }
+    .chip.red .chip-dot { background: var(--red); }
+    .chip.yellow { background: var(--yellow-dim);color: var(--yellow); border: 1px solid rgba(251,191,36,.2); }
+    .chip.yellow .chip-dot { background: var(--yellow); }
+    .chip.muted  { background: transparent;       color: var(--text2);  border: 1px solid var(--border); }
+    .chip.orange { background: rgba(251,146,60,.1); color: var(--orange); border: 1px solid rgba(251,146,60,.25); }
+    .chip.orange .chip-dot { background: var(--orange); }
+
+    .refresh-chip {
+      font-size: 0.68rem; color: var(--text2); font-family: var(--font-mono);
+      padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px;
+    }
+    .refresh-chip span { color: var(--blue); font-weight: 700; }
+
+    /* ── Config overlay ─────────────────────────────────────────── */
+    .config-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(7,11,18,0.92);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+    .config-overlay.hidden { display: none; }
+
+    .config-card {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 32px;
+      width: 100%; max-width: 560px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.06);
+    }
+    .config-logo {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    }
+    .config-logo .logo-icon { width: 44px; height: 44px; border-radius: 10px; font-size: 22px; }
+    .config-logo h1 { font-size: 1.4rem; font-weight: 700; color: #fff; }
+    .config-logo p  { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+
+    .config-section-title {
+      font-size: 0.65rem; font-weight: 700; color: var(--text2);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .config-section-title + .config-section-title { margin-top: 20px; }
+
+    .field { margin-bottom: 10px; }
+    .field label {
+      display: block; font-size: 0.72rem; color: var(--text2);
+      font-weight: 500; margin-bottom: 5px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text); font-family: var(--font-mono); font-size: 0.75rem;
+      padding: 9px 12px; outline: none; transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(56,189,248,0.1); }
+    .field input::placeholder { color: var(--muted); }
+
+    .config-footer { display: flex; gap: 10px; align-items: center; margin-top: 20px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+      font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+      background: var(--blue); color: #fff;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .config-error { font-size: 0.72rem; color: var(--red); }
+
+    /* ── Alert banners ──────────────────────────────────────────── */
+    .alert {
+      display: none; border-radius: var(--radius); padding: 16px 24px; margin-bottom: 18px;
+      font-size: 0.92rem; font-weight: 700; text-align: center; letter-spacing: 0.02em;
+    }
+    .alert.visible { display: flex; align-items: center; justify-content: center; gap: 12px; }
+
+    .alert-attack {
+      background: rgba(255,51,85,0.07); border: 1.5px solid rgba(255,51,85,0.5);
+      color: var(--red);
+      box-shadow: 0 0 30px rgba(255,51,85,0.12), inset 0 0 30px rgba(255,51,85,0.04);
+      animation: alertpulse 1.8s ease-in-out infinite;
+    }
+    @keyframes alertpulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(255,51,85,0.12), inset 0 0 30px rgba(255,51,85,0.04); }
+      50%       { box-shadow: 0 0 60px rgba(255,51,85,0.22), inset 0 0 40px rgba(255,51,85,0.08); }
+    }
+    .alert-safe {
+      background: var(--green-dim); border: 1.5px solid rgba(0,229,153,0.25);
+      color: var(--green);
+    }
+
+    .alert-icon { font-size: 1.3rem; }
+    .alert-text { }
+    .alert-sub  { font-weight: 400; font-size: 0.75rem; opacity: 0.75; margin-top: 2px; }
+
+    /* ── Stat row ───────────────────────────────────────────────── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 18px;
+    }
+    @media (max-width: 800px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 20px; position: relative; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--border2);
+    }
+    .stat-card.accent-green::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .stat-card.accent-red::before   { background: linear-gradient(90deg, transparent, var(--red),   transparent); }
+    .stat-card.accent-blue::before  { background: linear-gradient(90deg, transparent, var(--blue),  transparent); }
+    .stat-card.accent-yellow::before{ background: linear-gradient(90deg, transparent, var(--yellow),transparent); }
+
+    .stat-icon  { font-size: 1.1rem; margin-bottom: 10px; }
+    .stat-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); margin-bottom: 6px; }
+    .stat-value { font-size: 2rem; font-weight: 700; font-family: var(--font-mono); letter-spacing: -0.02em; }
+    .stat-value.green  { color: var(--green); }
+    .stat-value.red    { color: var(--red); }
+    .stat-value.blue   { color: var(--blue); }
+    .stat-value.yellow { color: var(--yellow); }
+    .stat-desc  { font-size: 0.67rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Agent grid ─────────────────────────────────────────────── */
+    .agents-section-title {
+      font-size: 0.65rem; font-weight: 700; color: var(--text2);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .agents-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin-bottom: 18px;
+    }
+    @media (max-width: 700px) { .agents-grid { grid-template-columns: 1fr; } }
+
+    .agent-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+      transition: border-color 0.35s, box-shadow 0.35s;
+      position: relative; overflow: hidden;
+    }
+    .agent-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: var(--radius);
+      opacity: 0; transition: opacity 0.35s;
+      pointer-events: none;
+    }
+    .agent-card.flagged {
+      border-color: rgba(255,51,85,0.5);
+      box-shadow: 0 0 24px rgba(255,51,85,0.12), inset 0 0 24px rgba(255,51,85,0.04);
+    }
+    .agent-card.flagged::after { background: radial-gradient(ellipse at top, rgba(255,51,85,0.04) 0%, transparent 70%); opacity: 1; }
+    .agent-card.safe {
+      border-color: rgba(0,229,153,0.35);
+      box-shadow: 0 0 18px rgba(0,229,153,0.08);
+    }
+    .agent-card.safe::after { background: radial-gradient(ellipse at top, rgba(0,229,153,0.04) 0%, transparent 70%); opacity: 1; }
+
+    .agent-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 12px; gap: 10px;
+    }
+    .agent-left { display: flex; align-items: center; gap: 10px; }
+
+    .agent-avatar {
+      width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      background: var(--surface3); border: 1px solid var(--border);
+    }
+    .agent-avatar.flagged-av { background: var(--red-dim); border-color: rgba(255,51,85,0.3); }
+    .agent-avatar.safe-av    { background: var(--green-dim); border-color: rgba(0,229,153,0.25); }
+
+    .agent-name-block { }
+    .agent-name { font-size: 0.88rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .agent-addr {
+      font-size: 0.62rem; color: var(--muted); font-family: var(--font-mono);
+      margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 180px;
+    }
+
+    .verdict-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .verdict-chip.monitoring { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
+    .verdict-chip.attack     { background: var(--red-dim);  color: var(--red);  border: 1px solid rgba(255,51,85,0.3); }
+    .verdict-chip.safe-v     { background: var(--green-dim);color: var(--green);border: 1px solid rgba(0,229,153,0.25); }
+
+    .agent-status-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.73rem; color: var(--text2); margin-bottom: 12px;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot.waiting  { background: var(--muted); animation: blinkdot 2.5s ease-in-out infinite; }
+    .dot.voted    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    @keyframes blinkdot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .agent-reasoning {
+      font-size: 0.76rem; color: var(--text2); line-height: 1.55;
+      min-height: 36px; margin-bottom: 12px;
+      padding: 10px 12px;
+      background: var(--bg2); border-radius: var(--radius-sm);
+      border-left: 2px solid var(--border2);
+      font-style: italic;
+    }
+    .agent-reasoning.has-attack { border-left-color: var(--red); color: #c9d8ee; }
+    .agent-reasoning.has-safe   { border-left-color: var(--green); }
+
+    .conf-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+    }
+    .conf-label { font-size: 0.67rem; color: var(--text2); white-space: nowrap; }
+    .conf-bar-wrap {
+      flex: 1; height: 4px; background: var(--surface3); border-radius: 2px;
+    }
+    .confidence-bar {
+      height: 4px; border-radius: 2px;
+      background: var(--muted); transition: width 0.5s ease, background 0.5s ease;
+    }
+    .conf-pct { font-size: 0.67rem; font-weight: 700; font-family: var(--font-mono); white-space: nowrap; }
+
+    .agent-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.64rem; color: var(--muted); font-family: var(--font-mono);
+      padding-top: 8px; border-top: 1px solid var(--border);
+    }
+    .agent-footer a { color: var(--blue); text-decoration: none; }
+    .agent-footer a:hover { text-decoration: underline; }
+
+    /* ── Controls ───────────────────────────────────────────────── */
+    .controls-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+      font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-danger {
+      background: rgba(255,51,85,0.12); color: var(--red);
+      border: 1px solid rgba(255,51,85,0.3);
+    }
+    .btn-danger:hover { background: rgba(255,51,85,0.2); }
+    .btn-ghost {
+      background: var(--surface); color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+    .btn-blue {
+      background: var(--blue); color: #fff; border: none;
+    }
+    .btn-blue:hover { opacity: 0.88; }
+    #trigger-status { font-size: 0.71rem; color: var(--text2); }
+
+    /* ── Timeline ───────────────────────────────────────────────── */
+    .timeline-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 18px;
+    }
+    .timeline-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .timeline-head-left {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text2);
+    }
+    .timeline-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+    #tl-count { font-size: 0.65rem; color: var(--muted); font-family: var(--font-mono); }
+
+    #timeline {
+      max-height: 240px; overflow-y: auto; padding: 6px 0;
+    }
+    #timeline::-webkit-scrollbar { width: 4px; }
+    #timeline::-webkit-scrollbar-track { background: transparent; }
+    #timeline::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .tl-entry {
+      display: grid;
+      grid-template-columns: 68px 136px 80px 50px 1fr;
+      gap: 0; align-items: center;
+      font-size: 0.72rem; padding: 7px 18px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s;
+      font-family: var(--font-mono);
+    }
+    .tl-entry:hover { background: var(--surface2); }
+    .tl-entry.attack { border-left-color: var(--red); }
+    .tl-entry.safe   { border-left-color: var(--green); }
+
+    .tl-time    { color: var(--muted); }
+    .tl-agent   { color: var(--blue); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
+    .tl-verdict-attack { color: var(--red);   font-weight: 700; }
+    .tl-verdict-safe   { color: var(--green); font-weight: 700; }
+    .tl-conf    { color: var(--yellow); }
+    .tl-reason  { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 8px; }
+    .tl-reason a { color: var(--blue); text-decoration: none; margin-left: 6px; }
+    .tl-empty   { padding: 20px 18px; font-size: 0.72rem; color: var(--muted); font-family: var(--font-mono); }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      text-align: center; font-size: 0.66rem; color: var(--muted);
+      font-family: var(--font-mono); padding: 4px 0;
+    }
+    .footer span { color: var(--text2); }
+
+    /* ── Utility ─────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ─────────────────── CONFIG OVERLAY ─────────────────── -->
+<div class="config-overlay" id="config-overlay">
+  <div class="config-card">
+    <div class="config-logo">
+      <div class="logo-icon">🛡️</div>
+      <div>
+        <h1>SwarmGuard</h1>
+        <p>AI-Powered DeFi Vault Protection · Monad Testnet</p>
+      </div>
+    </div>
+
+    <div class="config-section-title">Contract Addresses</div>
+    <div class="field">
+      <label>Coordinator Contract</label>
+      <input id="in-coordinator" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+    <div class="field">
+      <label>Vault Contract</label>
+      <input id="in-vault" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+
+    <div class="config-section-title" style="margin-top:20px">Agent Wallet Addresses <span style="font-weight:400;opacity:.6">(must match Coordinator constructor order)</span></div>
+    <div class="field">
+      <label>Agent 0 — FlashloanDetector</label>
+      <input id="in-agent0" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+    <div class="field">
+      <label>Agent 1 — OracleWatcher</label>
+      <input id="in-agent1" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+    <div class="field">
+      <label>Agent 2 — VelocityTracker</label>
+      <input id="in-agent2" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+    <div class="field">
+      <label>Agent 3 — WalletProfiler</label>
+      <input id="in-agent3" type="text" placeholder="0x..." spellcheck="false" />
+    </div>
+
+    <div class="config-footer">
+      <button class="btn-primary btn-blue" onclick="saveConfig()">
+        Connect &amp; Monitor
+      </button>
+      <span class="config-error" id="config-error"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────── MAIN DASHBOARD ─────────────────── -->
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🛡️</div>
+      <div>
+        <div class="logo-text">SwarmGuard</div>
+        <div class="logo-sub">AI-Powered DeFi Vault Protection</div>
+      </div>
+    </div>
+
+    <div class="live-pill"><span class="live-dot"></span>LIVE</div>
+
+    <div class="header-spacer"></div>
+
+    <div class="header-badges">
+      <span class="chip blue"><span class="chip-dot"></span>Monad Testnet · 10143</span>
+      <span class="chip muted" id="chain-badge">RPC: connecting…</span>
+      <span class="chip muted" id="status-server-badge">Status server: checking…</span>
+      <div class="refresh-chip">↻ <span id="countdown">5</span>s</div>
+    </div>
+  </header>
+
+  <!-- Alert banners -->
+  <div class="alert alert-attack" id="alert-attack">
+    <span class="alert-icon">⚠️</span>
+    <div>
+      <div class="alert-text">VAULT PAUSED — ATTACK THRESHOLD REACHED</div>
+      <div class="alert-sub">Funds are protected · Call Vault.unpause() in Remix to recover</div>
+    </div>
+  </div>
+  <div class="alert alert-safe" id="alert-safe">
+    <span class="alert-icon">✅</span>
+    <div>
+      <div class="alert-text">VAULT OPERATIONAL</div>
+      <div class="alert-sub">All agents monitoring · No attack detected</div>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stats-row" id="stats-row" style="display:none">
+    <div class="stat-card" id="sc-vault">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-label">Vault Status</div>
+      <div class="stat-value" id="sv-vault">—</div>
+      <div class="stat-desc">On-chain paused state</div>
+    </div>
+    <div class="stat-card accent-blue">
+      <div class="stat-icon">🚩</div>
+      <div class="stat-label">Flags Cast</div>
+      <div class="stat-value blue" id="sv-flags">—</div>
+      <div class="stat-desc">Attack votes submitted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-label">Threshold</div>
+      <div class="stat-value" id="sv-threshold">—</div>
+      <div class="stat-desc">Flags needed to pause</div>
+    </div>
+    <div class="stat-card" id="sc-triggered">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-label">Attack Triggered</div>
+      <div class="stat-value" id="sv-triggered">—</div>
+      <div class="stat-desc">Coordinator state</div>
+    </div>
+  </div>
+
+  <!-- Agent cards -->
+  <div class="agents-section-title" id="agents-title" style="display:none">AI Agents</div>
+  <div class="agents-grid" id="agents-grid" style="display:none">
+
+    <!-- FlashloanDetector (index 0) -->
+    <div class="agent-card" id="card-0">
+      <div class="agent-top">
+        <div class="agent-left">
+          <div class="agent-avatar" id="av-0">⚡</div>
+          <div class="agent-name-block">
+            <div class="agent-name">FlashloanDetector</div>
+            <div class="agent-addr" id="addr-0">—</div>
+          </div>
+        </div>
+        <span class="verdict-chip monitoring" id="badge-0">Monitoring</span>
+      </div>
+      <div class="agent-status-row">
+        <span class="dot waiting" id="dot-0"></span>
+        <span id="voted-0">Waiting for signal</span>
+      </div>
+      <div class="agent-reasoning" id="reasoning-0">Awaiting first evaluation…</div>
+      <div class="conf-row">
+        <span class="conf-label">Confidence</span>
+        <div class="conf-bar-wrap"><div class="confidence-bar" id="conf-bar-0" style="width:0%"></div></div>
+        <span class="conf-pct" id="conf-label-0">—</span>
+      </div>
+      <div class="agent-footer">
+        <span id="ts-0">Not yet evaluated</span>
+        <span id="tx-link-0"></span>
+      </div>
+    </div>
+
+    <!-- OracleWatcher (index 1) -->
+    <div class="agent-card" id="card-1">
+      <div class="agent-top">
+        <div class="agent-left">
+          <div class="agent-avatar" id="av-1">🔮</div>
+          <div class="agent-name-block">
+            <div class="agent-name">OracleWatcher</div>
+            <div class="agent-addr" id="addr-1">—</div>
+          </div>
+        </div>
+        <span class="verdict-chip monitoring" id="badge-1">Monitoring</span>
+      </div>
+      <div class="agent-status-row">
+        <span class="dot waiting" id="dot-1"></span>
+        <span id="voted-1">Waiting for signal</span>
+      </div>
+      <div class="agent-reasoning" id="reasoning-1">Awaiting first evaluation…</div>
+      <div class="conf-row">
+        <span class="conf-label">Confidence</span>
+        <div class="conf-bar-wrap"><div class="confidence-bar" id="conf-bar-1" style="width:0%"></div></div>
+        <span class="conf-pct" id="conf-label-1">—</span>
+      </div>
+      <div class="agent-footer">
+        <span id="ts-1">Not yet evaluated</span>
+        <span id="tx-link-1"></span>
+      </div>
+    </div>
+
+    <!-- VelocityTracker (index 2) -->
+    <div class="agent-card" id="card-2">
+      <div class="agent-top">
+        <div class="agent-left">
+          <div class="agent-avatar" id="av-2">📊</div>
+          <div class="agent-name-block">
+            <div class="agent-name">VelocityTracker</div>
+            <div class="agent-addr" id="addr-2">—</div>
+          </div>
+        </div>
+        <span class="verdict-chip monitoring" id="badge-2">Monitoring</span>
+      </div>
+      <div class="agent-status-row">
+        <span class="dot waiting" id="dot-2"></span>
+        <span id="voted-2">Waiting for signal</span>
+      </div>
+      <div class="agent-reasoning" id="reasoning-2">Awaiting first evaluation…</div>
+      <div class="conf-row">
+        <span class="conf-label">Confidence</span>
+        <div class="conf-bar-wrap"><div class="confidence-bar" id="conf-bar-2" style="width:0%"></div></div>
+        <span class="conf-pct" id="conf-label-2">—</span>
+      </div>
+      <div class="agent-footer">
+        <span id="ts-2">Not yet evaluated</span>
+        <span id="tx-link-2"></span>
+      </div>
+    </div>
+
+    <!-- WalletProfiler (index 3) -->
+    <div class="agent-card" id="card-3">
+      <div class="agent-top">
+        <div class="agent-left">
+          <div class="agent-avatar" id="av-3">🔍</div>
+          <div class="agent-name-block">
+            <div class="agent-name">WalletProfiler</div>
+            <div class="agent-addr" id="addr-3">—</div>
+          </div>
+        </div>
+        <span class="verdict-chip monitoring" id="badge-3">Monitoring</span>
+      </div>
+      <div class="agent-status-row">
+        <span class="dot waiting" id="dot-3"></span>
+        <span id="voted-3">Waiting for signal</span>
+      </div>
+      <div class="agent-reasoning" id="reasoning-3">Awaiting first evaluation…</div>
+      <div class="conf-row">
+        <span class="conf-label">Confidence</span>
+        <div class="conf-bar-wrap"><div class="confidence-bar" id="conf-bar-3" style="width:0%"></div></div>
+        <span class="conf-pct" id="conf-label-3">—</span>
+      </div>
+      <div class="agent-footer">
+        <span id="ts-3">Not yet evaluated</span>
+        <span id="tx-link-3"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-row" id="controls" style="display:none">
+    <button class="btn btn-danger" onclick="triggerDemo()">⚡ Trigger Attack Demo</button>
+    <button class="btn btn-ghost" onclick="clearTimeline()">Clear Timeline</button>
+    <button class="btn btn-ghost" onclick="openConfig()">⚙ Edit Addresses</button>
+    <span id="trigger-status"></span>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-card" id="timeline-section" style="display:none">
+    <div class="timeline-head">
+      <div class="timeline-head-left">
+        <span class="timeline-dot"></span>
+        Event Timeline
+      </div>
+      <span id="tl-count">0 events</span>
+    </div>
+    <div id="timeline">
+      <div class="tl-empty">Waiting for agent evaluations…</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" id="footer" style="display:none">
+    Last updated <span id="last-updated">—</span> · Monad Testnet · Chain ID 10143
+  </div>
+
+</div><!-- .page -->
+
+<script>
+const RPC_URL      = "https://testnet-rpc.monad.xyz/";
+const STATUS_SERVER = "http://localhost:8001";
+const EXPLORER     = "https://testnet.monadexplorer.com";
+
+const COORDINATOR_ABI = [
+  "function submitVerdict(bool isAttack) external",
+  "function agents(uint256) external view returns (address)",
+  "function hasVoted(address) external view returns (bool)",
+  "function flagCount() external view returns (uint256)",
+  "function threshold() external view returns (uint256)",
+  "function triggered() external view returns (bool)"
+];
+const VAULT_ABI = ["function paused() external view returns (bool)"];
+
+const AGENT_NAMES = ["FlashloanDetector","OracleWatcher","VelocityTracker","WalletProfiler"];
+const AGENT_IDX   = { FlashloanDetector:0, OracleWatcher:1, VelocityTracker:2, WalletProfiler:3 };
+
+let provider, coordinator, vault;
+let agentAddresses = [];
+let countdown = 5;
+let pollTimer = null, countdownTimer = null;
+const _seenReportKeys = new Set();
+let _tlCount = 0;
+
+// ── Config ───────────────────────────────────────────────────────────────────
+
+function saveConfig() {
+  const coord  = document.getElementById("in-coordinator").value.trim();
+  const vaultA = document.getElementById("in-vault").value.trim();
+  const agents = [0,1,2,3].map(i => document.getElementById(`in-agent${i}`).value.trim());
+  const errEl  = document.getElementById("config-error");
+
+  if (!coord || !vaultA || agents.some(a => !a)) {
+    errEl.textContent = "Please fill in all six addresses.";
+    return;
+  }
+  try {
+    provider    = new ethers.JsonRpcProvider(RPC_URL);
+    coordinator = new ethers.Contract(coord,  COORDINATOR_ABI, provider);
+    vault       = new ethers.Contract(vaultA, VAULT_ABI,       provider);
+    agentAddresses = agents;
+
+    localStorage.setItem("sg_coord",  coord);
+    localStorage.setItem("sg_vault",  vaultA);
+    agents.forEach((a,i) => localStorage.setItem(`sg_agent${i}`, a));
+
+    // Populate addresses into cards
+    agents.forEach((addr, i) => {
+      document.getElementById(`addr-${i}`).textContent =
+        addr.slice(0,6) + "…" + addr.slice(-4);
+    });
+
+    document.getElementById("config-overlay").classList.add("hidden");
+    ["stats-row","agents-grid","controls","timeline-section","footer","agents-title"]
+      .forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = id === "agents-grid" ? "grid"
+                                  : id === "stats-row"  ? "grid"
+                                  : id === "controls"   ? "flex"
+                                  : "block";
+      });
+
+    startPolling();
+  } catch(e) {
+    errEl.textContent = "Error: " + e.message;
+  }
+}
+
+function openConfig() {
+  document.getElementById("config-overlay").classList.remove("hidden");
+}
+
+// ── Polling ──────────────────────────────────────────────────────────────────
+
+function startPolling() {
+  pollAll();
+  pollTimer      = setInterval(pollAll, 5000);
+  countdownTimer = setInterval(() => {
+    countdown = Math.max(0, countdown - 1);
+    document.getElementById("countdown").textContent = countdown;
+    if (countdown === 0) countdown = 5;
+  }, 1000);
+}
+
+async function pollAll() {
+  await Promise.all([pollChain(), pollStatusServer()]);
+  document.getElementById("last-updated").textContent = new Date().toLocaleTimeString();
+  countdown = 5;
+}
+
+async function pollChain() {
+  try {
+    const [paused, flags, threshold, triggered] = await Promise.all([
+      vault.paused(),
+      coordinator.flagCount(),
+      coordinator.threshold(),
+      coordinator.triggered(),
+    ]);
+    const hasVotedArr = await Promise.all(agentAddresses.map(a => coordinator.hasVoted(a)));
+    updateChainUI({ paused, flags: Number(flags), threshold: Number(threshold), triggered, hasVotedArr });
+    setChip("chain-badge", "RPC: connected", "green");
+  } catch(e) {
+    console.warn("Chain poll:", e.message);
+    setChip("chain-badge", "RPC: error", "red");
+  }
+}
+
+async function pollStatusServer() {
+  try {
+    const res  = await fetch(`${STATUS_SERVER}/status`, { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    setChip("status-server-badge", "Agents: online", "green");
+    updateAgentReasonings(data.agents || {});
+  } catch {
+    setChip("status-server-badge", "Agents: offline", "yellow");
+  }
+}
+
+function setChip(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className   = `chip ${cls}`;
+  // Re-add chip-dot if the class has it
+  if (cls !== "muted") {
+    el.innerHTML = `<span class="chip-dot"></span>${text}`;
+  }
+}
+
+// ── Chain UI ─────────────────────────────────────────────────────────────────
+
+function updateChainUI({ paused, flags, threshold, triggered, hasVotedArr }) {
+  const vaultEl = document.getElementById("sv-vault");
+  const scVault = document.getElementById("sc-vault");
+  if (paused) {
+    vaultEl.textContent = "PAUSED"; vaultEl.className = "stat-value red";
+    scVault.classList.add("accent-red");
+    scVault.classList.remove("accent-green");
+  } else {
+    vaultEl.textContent = "ACTIVE"; vaultEl.className = "stat-value green";
+    scVault.classList.add("accent-green");
+    scVault.classList.remove("accent-red");
+  }
+
+  document.getElementById("sv-flags").textContent = flags;
+
+  const thEl = document.getElementById("sv-threshold");
+  thEl.textContent = threshold; thEl.className = "stat-value";
+
+  const trigEl = document.getElementById("sv-triggered");
+  const scTrig = document.getElementById("sc-triggered");
+  if (triggered) {
+    trigEl.textContent = "YES"; trigEl.className = "stat-value red";
+    scTrig.classList.add("accent-red");
+  } else {
+    trigEl.textContent = "NO"; trigEl.className = "stat-value green";
+    scTrig.classList.remove("accent-red");
+  }
+
+  // Alert banners
+  if (triggered || paused) {
+    document.getElementById("alert-attack").classList.add("visible");
+    document.getElementById("alert-safe").classList.remove("visible");
+  } else {
+    document.getElementById("alert-attack").classList.remove("visible");
+    document.getElementById("alert-safe").classList.add("visible");
+  }
+
+  // Per-agent on-chain voted state
+  hasVotedArr.forEach((voted, i) => {
+    if (voted) {
+      document.getElementById(`dot-${i}`).className    = "dot voted";
+      document.getElementById(`voted-${i}`).textContent = "Voted on-chain ✓";
+    }
+  });
+}
+
+// ── Status server UI ─────────────────────────────────────────────────────────
+
+function updateAgentReasonings(agents) {
+  for (const [name, report] of Object.entries(agents)) {
+    const i = AGENT_IDX[name];
+    if (i === undefined) continue;
+
+    const reasoning  = report.reasoning  || "";
+    const confidence = report.confidence ?? 0;
+    const isAttack   = report.is_attack  ?? false;
+    const evalAt     = report.evaluated_at || report.received_at || "";
+    const txHash     = report.tx_hash || null;
+
+    // Reasoning block
+    const rEl = document.getElementById(`reasoning-${i}`);
+    rEl.textContent  = reasoning || "Awaiting first evaluation…";
+    rEl.className    = `agent-reasoning${isAttack ? " has-attack" : reasoning ? " has-safe" : ""}`;
+
+    // Confidence bar + label
+    const pct = Math.round(confidence * 100);
+    const bar = document.getElementById(`conf-bar-${i}`);
+    bar.style.width      = `${pct}%`;
+    bar.style.background = isAttack
+      ? "var(--red)"
+      : pct > 60 ? "var(--green)" : "var(--yellow)";
+    document.getElementById(`conf-label-${i}`).textContent = pct ? `${pct}%` : "—";
+
+    // Timestamp + tx link
+    const ts = evalAt ? evalAt.substring(11,19) : "";
+    document.getElementById(`ts-${i}`).textContent = ts ? `Evaluated ${ts}` : "Not yet evaluated";
+    const txEl = document.getElementById(`tx-link-${i}`);
+    txEl.innerHTML = txHash
+      ? `<a href="${EXPLORER}/tx/${txHash}" target="_blank">View tx ↗</a>`
+      : "";
+
+    // Card + badge + avatar state
+    const card  = document.getElementById(`card-${i}`);
+    const badge = document.getElementById(`badge-${i}`);
+    const av    = document.getElementById(`av-${i}`);
+    if (isAttack) {
+      card.className  = "agent-card flagged";
+      badge.className = "verdict-chip attack"; badge.textContent = "ATTACK ⚠";
+      av.className    = "agent-avatar flagged-av";
+    } else if (reasoning) {
+      card.className  = "agent-card safe";
+      badge.className = "verdict-chip safe-v"; badge.textContent = "Safe ✓";
+      av.className    = "agent-avatar safe-av";
+    }
+
+    // Timeline
+    const key = `${name}:${evalAt}`;
+    if (!_seenReportKeys.has(key) && reasoning) {
+      _seenReportKeys.add(key);
+      appendTimeline({ name, isAttack, confidence, reasoning, ts, txHash });
+    }
+  }
+}
+
+// ── Timeline ─────────────────────────────────────────────────────────────────
+
+function appendTimeline({ name, isAttack, confidence, reasoning, ts, txHash }) {
+  const tl    = document.getElementById("timeline");
+  const empty = tl.querySelector(".tl-empty");
+  if (empty) empty.remove();
+
+  const pct         = Math.round(confidence * 100);
+  const verdictHtml = isAttack
+    ? `<span class="tl-verdict-attack">ATTACK ⚠</span>`
+    : `<span class="tl-verdict-safe">SAFE ✓</span>`;
+  const txLink = txHash
+    ? `<a href="${EXPLORER}/tx/${txHash}" target="_blank">tx↗</a>`
+    : "";
+
+  const entry = document.createElement("div");
+  entry.className = `tl-entry ${isAttack ? "attack" : "safe"}`;
+  entry.innerHTML = `
+    <span class="tl-time">${ts || "—"}</span>
+    <span class="tl-agent">${name}</span>
+    ${verdictHtml}
+    <span class="tl-conf">${pct}%</span>
+    <span class="tl-reason">${reasoning} ${txLink}</span>
+  `;
+  tl.prepend(entry);
+  _tlCount++;
+  document.getElementById("tl-count").textContent = `${_tlCount} event${_tlCount !== 1 ? "s" : ""}`;
+}
+
+function clearTimeline() {
+  document.getElementById("timeline").innerHTML = '<div class="tl-empty">Timeline cleared.</div>';
+  _tlCount = 0; _seenReportKeys.clear();
+  document.getElementById("tl-count").textContent = "0 events";
+}
+
+// ── Demo trigger ──────────────────────────────────────────────────────────────
+
+async function triggerDemo() {
+  const st = document.getElementById("trigger-status");
+  st.textContent = "Sending…";
+  try {
+    const res  = await fetch(`${STATUS_SERVER}/trigger-demo`, { method: "POST" });
+    const data = await res.json();
+    st.textContent = data.message || "Triggered.";
+    setTimeout(() => { st.textContent = ""; }, 5000);
+  } catch {
+    st.textContent = "Status server offline — run: python simulate_attack.py --mode attack";
+    setTimeout(() => { st.textContent = ""; }, 7000);
+  }
+}
+
+// ── Restore from localStorage ─────────────────────────────────────────────────
+
+window.addEventListener("DOMContentLoaded", () => {
+  const coord  = localStorage.getItem("sg_coord");
+  const vaultA = localStorage.getItem("sg_vault");
+  const agents = [0,1,2,3].map(i => localStorage.getItem(`sg_agent${i}`));
+  if (coord && vaultA && agents.every(Boolean)) {
+    document.getElementById("in-coordinator").value = coord;
+    document.getElementById("in-vault").value       = vaultA;
+    agents.forEach((a,i) => { document.getElementById(`in-agent${i}`).value = a; });
+    saveConfig();
+  }
+});
+</script>
+</body>
+</html>

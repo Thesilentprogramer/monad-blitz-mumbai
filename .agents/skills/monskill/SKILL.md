@@ -54,7 +54,8 @@ This file will guide to the right skill with the latest knowledge about Monad an
 - Embedded MPC wallets with email / phone / passkey / social login (Google, Apple, Twitter, Discord, Facebook, Farcaster), plus external-wallet connect (MetaMask, Coinbase, WalletConnect, Rainbow, Zerion, Rabby) — same `ParaProvider` handles both.
 - Single integration path: `para init` + `ParaProvider` + `para doctor` against an already-scaffolded frontend. Project scaffolding lives in the `scaffold/` skill — never run `para create` from this skill.
 - Always apply the Monad-specific patch (`references/para-monad-wiring.md`) — Para's SDK ships a generic EVM wagmi config that doesn't include `monad` / `monadTestnet` from `wagmi/chains`.
-- Prereqs: `npm install -g @getpara/cli` + `para login`. The monskills hook gates `para` commands until both are satisfied. Never install the CLI or run `login` on the user's behalf — surface the prompt and wait.
+- Prereqs: `npm install -g @getpara/cli` + `para login`. The monskills hook gates `para` commands until both are satisfied. Never install the CLI or run `login` on the user's beh
+alf — surface the prompt and wait.
 
 ### [Gas](/gas/SKILL.md)
 - How gas pricing works on Monad vs Ethereum.

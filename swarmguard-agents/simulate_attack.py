@@ -154,7 +154,7 @@ def _append(signal: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def mode_normal() -> None:
-    print("Normal mode — benign signals every 15-20s. Ctrl+C to stop.\n")
+    print("Normal mode -- benign signals every 15-20s. Ctrl+C to stop.\n")
     while True:
         for factory in [benign_oracle, benign_wallet, benign_flashloan, benign_velocity]:
             _append(factory())
@@ -166,22 +166,22 @@ def mode_normal() -> None:
 def mode_attack() -> None:
     """Staggered narrative attack over ~20 seconds."""
     print("\n" + "="*60)
-    print("  ATTACK SIMULATION — staggered narrative")
+    print("  ATTACK SIMULATION -- staggered narrative")
     print("="*60)
 
-    print("\nT+0s  → OracleWatcher   — suspicious price spike (+240% in 2s)")
+    print("\nT+0s  -> OracleWatcher   -- suspicious price spike (+240% in 2s)")
     _append(attack_oracle())
 
     time.sleep(5)
-    print("\nT+5s  → WalletProfiler  — brand-new wallet moving $9.8M")
+    print("\nT+5s  -> WalletProfiler  -- brand-new wallet moving $9.8M")
     _append(attack_wallet())
 
     time.sleep(5)
-    print("\nT+10s → FlashloanDetect — 12.5M same-block borrow/repay (3rd flag → auto-pause)")
+    print("\nT+10s -> FlashloanDetect -- 12.5M same-block borrow/repay (3rd flag -> auto-pause)")
     _append(attack_flashloan())
 
     time.sleep(5)
-    print("\nT+15s → VelocityTracker — vault already frozen, drain attempt blocked")
+    print("\nT+15s -> VelocityTracker -- vault already frozen, drain attempt blocked")
     _append(attack_velocity())
 
     print("\n" + "="*60)
@@ -190,7 +190,7 @@ def mode_attack() -> None:
 
 
 def mode_demo(attack_delay: int) -> None:
-    print(f"Demo mode — {attack_delay}s of normal signals, then staggered attack.\n")
+    print(f"Demo mode -- {attack_delay}s of normal signals, then staggered attack.\n")
     start = time.time()
     while time.time() - start < attack_delay:
         for factory in [benign_oracle, benign_wallet, benign_flashloan, benign_velocity]:

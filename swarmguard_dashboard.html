@@ -474,6 +474,12 @@
       </div>
     </div>
 
+    <div class="config-section-title">Backend (Status Server)</div>
+    <div class="field">
+      <label>Status Server URL</label>
+      <input id="in-status-server" type="text" placeholder="http://localhost:8001" spellcheck="false" />
+    </div>
+
     <div class="config-section-title">Contract Addresses</div>
     <div class="field">
       <label>Coordinator Contract</label>
@@ -728,9 +734,9 @@
 </div><!-- .page -->
 
 <script>
-const RPC_URL      = "https://testnet-rpc.monad.xyz/";
-const STATUS_SERVER = "http://localhost:8001";
-const EXPLORER     = "https://testnet.monadexplorer.com";
+const RPC_URL  = "https://testnet-rpc.monad.xyz/";
+const EXPLORER = "https://testnet.monadexplorer.com";
+let STATUS_SERVER = "http://localhost:8001";
 
 const COORDINATOR_ABI = [
   "function submitVerdict(bool isAttack) external",
@@ -755,6 +761,7 @@ let _tlCount = 0;
 // ── Config ───────────────────────────────────────────────────────────────────
 
 function saveConfig() {
+  const statusUrl = document.getElementById("in-status-server").value.trim() || "http://localhost:8001";
   const coord  = document.getElementById("in-coordinator").value.trim();
   const vaultA = document.getElementById("in-vault").value.trim();
   const agents = [0,1,2,3].map(i => document.getElementById(`in-agent${i}`).value.trim());
@@ -765,11 +772,13 @@ function saveConfig() {
     return;
   }
   try {
+    STATUS_SERVER = statusUrl;
     provider    = new ethers.JsonRpcProvider(RPC_URL);
     coordinator = new ethers.Contract(coord,  COORDINATOR_ABI, provider);
     vault       = new ethers.Contract(vaultA, VAULT_ABI,       provider);
     agentAddresses = agents;
 
+    localStorage.setItem("sg_status_server", statusUrl);
     localStorage.setItem("sg_coord",  coord);
     localStorage.setItem("sg_vault",  vaultA);
     agents.forEach((a,i) => localStorage.setItem(`sg_agent${i}`, a));
@@ -1023,17 +1032,12 @@ async function triggerDemo() {
 // ── Restore from localStorage ─────────────────────────────────────────────────
 
 window.addEventListener("DOMContentLoaded", () => {
-  // Pre-fill default mock values
-  document.getElementById("in-coordinator").value = "0x0000000000000000000000000000000000000001";
-  document.getElementById("in-vault").value       = "0x0000000000000000000000000000000000000002";
-  document.getElementById("in-agent0").value      = "0x97B2559F41D20C1A740799135135c38A6532e2B0";
-  document.getElementById("in-agent1").value      = "0x2D72f31A0aFb8B534eef722Fff0e7aB3Cc855848";
-  document.getElementById("in-agent2").value      = "0x2c1EE15c58f4157aA9b7A52e48B25BB930E0a2dB";
-  document.getElementById("in-agent3").value      = "0xDd437Bff14a2EF6721cE3F27E4f33c2D50962CDA";
-
-  const coord  = localStorage.getItem("sg_coord");
-  const vaultA = localStorage.getItem("sg_vault");
-  const agents = [0,1,2,3].map(i => localStorage.getItem(`sg_agent${i}`));
+  const statusUrl = localStorage.getItem("sg_status_server") || "http://localhost:8001";
+  const coord  = localStorage.getItem("sg_coord")  || "0x5349e8F3180B323e783309651F22457b1Cb24852";
+  const vaultA = localStorage.getItem("sg_vault")  || "0x3651FB24635E288B567cd1bCB9091721C011e2D2";
+  const defaults = ["0x97B2559F41D20C1A740799135135c38A6532e2B0","0x2D72f31A0aFb8B534eef722Fff0e7aB3Cc855848","0x2c1EE15c58f4157aA9b7A52e48B25BB930E0a2dB","0xDd437Bff14a2EF6721cE3F27E4f33c2D50962CDA"];
+  const agents = [0,1,2,3].map(i => localStorage.getItem(`sg_agent${i}`) || defaults[i]);
+  document.getElementById("in-status-server").value = statusUrl;
   if (coord && vaultA && agents.every(Boolean)) {
     document.getElementById("in-coordinator").value = coord;
     document.getElementById("in-vault").value       = vaultA;
